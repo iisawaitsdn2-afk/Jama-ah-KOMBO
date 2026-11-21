@@ -314,6 +314,23 @@ dialog[open]::backdrop{animation:fadeIn .3s}
 .kclock b{color:var(--pr)}
 .kf-w{background:var(--card);border:1px solid var(--bd);color:var(--tx);box-shadow:var(--sh)}
 .kf-w.ar{font-size:17px;color:var(--pr)}
+
+/* ===== JADWAL SHOLAT ===== */
+.sh-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:26px 28px;margin-bottom:14px}
+.sh-hero h2{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:2px 0}
+.sh-cd{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--logo)}.sh-cd.s{font-size:20px}
+.sh-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.sh-bar select{width:auto}
+.sh-list{display:grid;gap:8px;margin-bottom:22px}
+.sh-r{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;padding:14px 18px;border:1px solid var(--bd);border-radius:var(--r);background:var(--solid)}
+.sh-r small{color:var(--mu);font-size:12.5px}.sh-r .tm{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.sh-r.on{border-color:var(--pr);box-shadow:0 0 0 3px var(--ring)}.sh-r.nx .tm{color:var(--logo)}.sh-r.done{opacity:.55}.sh-r.rise{background:transparent;border-style:dashed;padding:10px 18px}.sh-r.rise .tm{font-size:17px}
+.sh-h{font-size:17px;font-weight:700;margin:6px 0 12px}
+.sh-g{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:22px}
+.sh-g .card{padding:16px 18px}.sh-g .tm{font-size:20px;font-weight:700;margin:4px 0;font-variant-numeric:tabular-nums}
+.sh-p{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--soft);font-size:13px;margin:6px 6px 0 0}.sh-p.x{background:rgba(224,80,70,.14);color:#c0392b}
+.sh-strip{display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:20px;cursor:pointer}.sh-strip>div{flex:1}.sh-strip b{display:block}
+.sh-strip .ico{width:40px;height:40px;border-radius:11px;background:var(--soft);color:var(--pr);display:grid;place-items:center;flex:none}
+@media(max-width:800px){.sh-hero{padding:20px}.sh-cd{font-size:34px}.sh-r{grid-template-columns:84px 1fr auto;padding:12px 14px}}
 </style>
 </head>
 <body>
@@ -322,6 +339,7 @@ dialog[open]::backdrop{animation:fadeIn .3s}
  <div class="logo"><span class="lm">K</span><span class="lt"><b>KOMBO</b><small>JAMA'AH</small></span></div>
  <button class="nav" data-r="dash" onclick="go('dash')"><i data-i="home"></i>Dashboard</button>
  <button class="nav" data-r="jamaah" onclick="go('jamaah')"><i data-i="users"></i>Jama'ah</button>
+ <button class="nav" data-r="sholat" onclick="go('sholat')"><i data-i="moon"></i>Jadwal Sholat</button>
  <button class="nav" data-r="set" onclick="go('set')"><i data-i="settings"></i>Pengaturan</button>
  <button class="nav" onclick="logout()"><i data-i="out"></i>Keluar</button>
  <div class="sb-ceo"><small>CEO</small><span>Latif</span></div>
@@ -363,6 +381,84 @@ dialog[open]::backdrop{animation:fadeIn .3s}
 </div>
 <dialog id="dlg"><form id="frm" method="dialog"><h3 id="dt"></h3><div id="db"></div>
 <div class="row" style="margin:18px 0 0;justify-content:flex-end"><button type="button" class="btn s" onclick="dlg.close()">Batal</button><button class="btn" id="ok">Simpan</button></div></form></dialog>
+
+<script>
+const SHOL=(function(){
+var CITY=[["Sragen",-7.427,111.023,7],["Solo",-7.567,110.828,7],["Yogyakarta",-7.796,110.37,7],["Semarang",-6.967,110.417,7],["Surabaya",-7.258,112.752,7],["Jakarta",-6.209,106.846,7],["Bandung",-6.918,107.619,7],["Medan",3.595,98.672,7],["Makassar",-5.148,119.433,8],["Denpasar",-8.671,115.213,8],["Jayapura",-2.534,140.718,9]];
+var PR=[["Subuh","Fajr","Qabliyah 2 rakaat*"],["Dzuhur","Dhuhr","Qabliyah 2*, ba'diyah 2*"],["Ashar","Asr","Qabliyah 4"],["Maghrib","Maghrib","Qabliyah 2, ba'diyah 2*"],["Isya","Isha","Qabliyah 2, ba'diyah 2*"]];
+var HM=["Muharram","Safar","Rabiul Awal","Rabiul Akhir","Jumadil Awal","Jumadil Akhir","Rajab","Sya'ban","Ramadhan","Syawal","Dzulqa'dah","Dzulhijjah"];
+var HR=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+var BL=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+var loc;try{loc=JSON.parse(ls("kj_loc"))}catch(e){}
+loc=loc&&loc.lat?loc:{n:CITY[0][0],lat:CITY[0][1],lng:CITY[0][2],tz:CITY[0][3]};
+var hj=+ls("kj_hj")||0,al=ls("kj_adz")==="1",T=null,st="",fired="",iv=null;
+var g=function(i){return document.getElementById(i)},p2=function(n){return(n<10?"0":"")+n};
+function lnow(){return new Date(Date.now()+loc.tz*36e5)}
+function ymd(d){return d.getUTCFullYear()+"-"+p2(d.getUTCMonth()+1)+"-"+p2(d.getUTCDate())}
+function mk(d,hm){var a=hm.split(":");return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),+a[0],+a[1])-loc.tz*36e5}
+function hm(ms){var d=new Date(ms+loc.tz*36e5);return p2(d.getUTCHours())+":"+p2(d.getUTCMinutes())}
+function cd(ms){ms=Math.max(0,ms);var s=Math.floor(ms/1000);return p2(Math.floor(s/3600))+":"+p2(Math.floor(s%3600/60))+":"+p2(s%60)}
+function hijri(off){var d=new Date(lnow().getTime()+(off+hj)*864e5),o={};try{new Intl.DateTimeFormat("en-u-ca-islamic-umalqura",{day:"numeric",month:"numeric",year:"numeric",timeZone:"UTC"}).formatToParts(d).forEach(function(p){o[p.type]=+p.value})}catch(e){return null}return o.day?{d:o.day,m:o.month,y:o.year||o.relatedYear}:null}
+function puasa(off){var wd=new Date(lnow().getTime()+off*864e5).getUTCDay(),h=hijri(off),r=[];
+ if(h){var m=h.m,d=h.d;
+  if((m===10&&d===1)||(m===12&&d>=10&&d<=13))return{x:1,l:["Hari terlarang berpuasa ("+(m===10?"Idul Fitri":"Idul Adha dan tasyrik")+")"]};
+  if(m===9)return{l:["Bulan Ramadhan: puasa wajib"]};
+  if(d>=13&&d<=15)r.push("Ayyamul Bidh");
+  if(m===12&&d===9)r.push("Puasa Arafah");
+  if(m===1&&d===9)r.push("Puasa Tasu'a");
+  if(m===1&&d===10)r.push("Puasa Asyura");
+  if(m===10&&d>=2)r.push("Puasa 6 hari Syawal")}
+ if(wd===1)r.push("Puasa Senin");if(wd===4)r.push("Puasa Kamis");
+ return{l:r}}
+function build(raw,day,src){T={day:day,raw:raw,src:src};st=src==="online"?"Sumber: Aladhan, metode Kemenag RI":src==="cache"?"Jadwal tersimpan di perangkat (metode Kemenag RI)":"Offline: memakai jadwal terakhir, bisa selisih 1-2 menit";paint();tick()}
+function load(){var d=lnow(),day=ymd(d),pre="kj_sh|"+loc.lat.toFixed(2)+"|"+loc.lng.toFixed(2)+"|",raw=null;
+ try{raw=JSON.parse(ls(pre+day))}catch(e){}
+ if(raw){build(raw,day,"cache");return}
+ st="Mengambil jadwal...";paint();
+ fetch("https://api.aladhan.com/v1/timings/"+p2(d.getUTCDate())+"-"+p2(d.getUTCMonth()+1)+"-"+d.getUTCFullYear()+"?latitude="+loc.lat+"&longitude="+loc.lng+"&method=20").then(function(r){return r.json()}).then(function(j){var t=j.data.timings,o={};["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"].forEach(function(k){o[k]=String(t[k]).slice(0,5)});ls(pre+day,JSON.stringify(o));try{Object.keys(localStorage).filter(function(k){return k.indexOf("kj_sh|")===0}).sort().slice(0,-6).forEach(function(k){localStorage.removeItem(k)})}catch(e){}build(o,day,"online")}).catch(function(){
+  var ks=[];try{ks=Object.keys(localStorage).filter(function(k){return k.indexOf(pre)===0}).sort()}catch(e){}
+  var last=ks.length&&ls(ks[ks.length-1]);if(last){try{build(JSON.parse(last),day,"old");return}catch(e){}}
+  st="Tidak bisa mengambil jadwal. Sambungkan internet lalu buka halaman ini lagi.";paint()})}
+function calc(){var d=lnow(),t={};for(var k in T.raw)t[k]=mk(d,T.raw[k]);var n=t.Fajr+864e5-t.Maghrib;t.Last=t.Maghrib+n*2/3;t.DhS=t.Sunrise+15*6e4;t.DhE=t.Dhuhr-10*6e4;return t}
+function nextP(t){var now=Date.now();for(var i=0;i<PR.length;i++)if(t[PR[i][1]]>now)return{i:i,t:t[PR[i][1]]};return{i:0,t:t.Fajr+864e5}}
+function curP(t){var now=Date.now(),c=-1;for(var i=0;i<PR.length;i++)if(t[PR[i][1]]<=now)c=i;return c}
+function tick(){if(!T)return;if(ymd(lnow())!==T.day){load();return}
+ var t=calc(),n=nextP(t),c=curP(t),now=Date.now(),nm=PR[n.i][0];
+ var a=g("sh-nx");if(a)a.textContent=nm;a=g("sh-at");if(a)a.textContent="pukul "+hm(n.t);a=g("sh-cd");if(a)a.textContent=cd(n.t-now);
+ a=g("shs-n");if(a)a.textContent=nm+" "+hm(n.t);a=g("shs-c");if(a)a.textContent=cd(n.t-now);
+ document.querySelectorAll(".sh-r[data-i]").forEach(function(e){var i=+e.dataset.i;e.className="sh-r"+(i===c?" on":i<c?" done":"")+(i===n.i?" nx":"")});
+ if(al)PR.forEach(function(p,i){var k=T.day+p[0];if(now>=t[p[1]]&&now<t[p[1]]+15e3&&fired!==k){fired=k;try{toast("Waktu "+p[0]+" telah masuk")}catch(e){}try{ting(2)}catch(e){}}})}
+function paint(){var r=g("sh-root");if(!r)return;
+ if(!T){r.innerHTML='<p class="mu">'+st+"</p>";return}
+ var t=calc(),d=lnow(),h=hijri(0),tgl=HR[d.getUTCDay()]+", "+d.getUTCDate()+" "+BL[d.getUTCMonth()]+" "+d.getUTCFullYear(),th=h?h.d+" "+HM[h.m-1]+" "+h.y+" H":"";
+ var opt=CITY.map(function(c,i){return'<option value="'+i+'"'+(c[0]===loc.n?" selected":"")+">"+c[0]+"</option>"}).join("")+(CITY.some(function(c){return c[0]===loc.n})?"":'<option selected>'+loc.n+"</option>");
+ var rows=[0,1,2,3,4].map(function(i){var p=PR[i],h="";
+  var row='<div class="sh-r" data-i="'+i+'"><b>'+p[0]+'</b><small>'+p[2]+'</small><span class="tm">'+hm(t[p[1]])+"</span></div>";
+  return i===1?'<div class="sh-r rise"><b>Terbit</b><small>Waktu Subuh berakhir</small><span class="tm">'+hm(t.Sunrise)+"</span></div>"+row:row}).join("");
+ rows=rows.replace(/(<div class="sh-r rise">[\s\S]*?<\/div>)([\s\S]*)/,function(m,a,b){return m});
+ var pz=function(o){var q=puasa(o);return q.l.length?q.l.map(function(x){return'<span class="sh-p'+(q.x?" x":"")+'">'+x+"</span>"}).join(""):'<span class="mu">Tidak ada puasa sunnah khusus</span>'};
+ var fri=d.getUTCDay()===5?'<div class="card"><b>Sunnah hari Jumat</b><p class="mu" style="margin-top:6px">Mandi, memakai wangi-wangian, membaca Al-Kahfi, memperbanyak sholawat.</p></div>':"";
+ r.innerHTML='<div class="card sh-hero"><div><div class="mu">Sholat berikutnya</div><h2 id="sh-nx"></h2><div class="mu" id="sh-at"></div></div><div class="sh-cd" id="sh-cd">--:--:--</div></div>'
+ +'<div class="sh-bar"><span class="mu">'+tgl+(th?" · "+th:"")+'</span><span style="flex:1"></span><select aria-label="Lokasi" onchange="SHOL.city(this.value)">'+opt+'</select><button class="btn s" onclick="SHOL.geo()">Pakai lokasiku</button></div>'
+ +'<div class="sh-list">'+rows+'</div><p class="mu" style="margin:-12px 0 20px;font-size:12.5px">* sunnah muakkad (sangat dianjurkan)</p>'
+ +'<div class="sh-h">Sholat sunnah hari ini</div><div class="sh-g">'
+ +'<div class="card"><b>Dhuha</b><div class="tm">'+hm(t.DhS)+" - "+hm(t.DhE)+'</div><small class="mu">2 sampai 12 rakaat</small></div>'
+ +'<div class="card"><b>Tahajjud</b><div class="tm">'+hm(t.Last)+" - "+hm(t.Fajr)+'</div><small class="mu">Sepertiga malam terakhir (malam ini)</small></div>'
+ +'<div class="card"><b>Witir</b><div class="tm">'+hm(t.Isha)+" - "+hm(t.Fajr)+'</div><small class="mu">Setelah Isya sampai Subuh, 1 sampai 11 rakaat</small></div>'+fri+"</div>"
+ +'<div class="sh-h">Puasa sunnah</div><div class="sh-g"><div class="card"><b>Hari ini</b><div>'+pz(0)+'</div></div><div class="card"><b>Besok</b><div>'+pz(1)+"</div></div></div>"
+ +'<div class="sh-bar"><label class="mu"><input type="checkbox" '+(al?"checked":"")+' onchange="SHOL.adz(this.checked)" style="width:auto;margin-right:6px">Bunyi pengingat saat waktu sholat masuk (aplikasi harus terbuka)</label><span style="flex:1"></span><span class="mu">Koreksi Hijriah</span><select aria-label="Koreksi Hijriah" onchange="SHOL.hj(this.value)">'+[-1,0,1].map(function(v){return'<option value="'+v+'"'+(v===hj?" selected":"")+">"+(v>0?"+":"")+v+" hari</option>"}).join("")+"</select></div>"
+ +'<p class="mu" style="font-size:12.5px;margin-top:10px">'+st+'. Tanggal Hijriah dihitung otomatis dan bisa berbeda 1 hari dari penetapan pemerintah, sesuaikan dengan koreksi di atas.</p>';tick()}
+function ensure(){if(!iv)iv=setInterval(tick,1000);if(!T)load()}
+return{
+ view:function(){ensure();setTimeout(paint,0);return["Jadwal Sholat",'<div id="sh-root"></div>']},
+ strip:function(){ensure();setTimeout(tick,0);return'<div class="card sh-strip" onclick="go(\'sholat\')"><span class="ico">'+ic("moon")+'</span><div><span class="mu">Sholat berikutnya</span><b id="shs-n">Memuat jadwal...</b></div><div class="sh-cd s" id="shs-c"></div></div>'},
+ city:function(i){var c=CITY[i];loc={n:c[0],lat:c[1],lng:c[2],tz:c[3]};ls("kj_loc",JSON.stringify(loc));T=null;load()},
+ geo:function(){if(!navigator.geolocation){toast("Perangkat tidak mendukung lokasi");return}navigator.geolocation.getCurrentPosition(function(p){loc={n:"Lokasi saya",lat:p.coords.latitude,lng:p.coords.longitude,tz:-new Date().getTimezoneOffset()/60};ls("kj_loc",JSON.stringify(loc));T=null;load()},function(){toast("Izin lokasi ditolak")})},
+ hj:function(v){hj=+v;ls("kj_hj",String(hj));paint()},
+ adz:function(v){al=!!v;ls("kj_adz",al?"1":"0");if(al){try{ting(0)}catch(e){}}}
+}})();
+</script>
 
 <script>
 const KLS=['VII','VIII','IX','X','XI','XII'];
@@ -427,7 +523,7 @@ function hideLogin(){const l=$('login');l.style.transition='opacity .5s ease';l.
 let stack=[{r:'dash'}];
 const cur=()=>stack[stack.length-1];
 function go(r,p={}){ting(0);ANIM=1;dir=1;if(S&&!isAd()&&(r==='dash'||(r==='jamaah'&&S.kelas.length===1))){stack=[home()];drawer(0);render();return}
- stack=(r==='dash'||r==='jamaah'||r==='set')&&!p.keep?[{r,...p}]:[...stack,{r,...p}];drawer(0);render()}
+ stack=(r==='dash'||r==='jamaah'||r==='set'||r==='sholat')&&!p.keep?[{r,...p}]:[...stack,{r,...p}];drawer(0);render()}
 function back(){if(stack.length>1){ting(1);ANIM=1;dir=-1;stack.pop();render()}}
 function drawer(o){$('sb').classList.toggle('open',!!o);$('shade').classList.toggle('open',!!o)}
 function theme(){ting(0);const h=document.documentElement;h.classList.add('tt');setTimeout(()=>h.classList.remove('tt'),500);D.theme=D.theme==='dark'?'light':'dark';save();document.documentElement.dataset.t=D.theme}
@@ -793,6 +889,7 @@ function render(){
  const V=views[c.r];const o=V(c);$('ttl').textContent=o[0];$('view').innerHTML=o[1];scrollTo({top:0,behavior:'instant'});sndIcon();if(ANIM){ANIM=0;anim()}
 }
 const views={
+sholat(){return SHOL.view()},
 dash(){
  const m=new Date().getMonth();
  const n=Object.entries(D.sheet).reduce((a,[q,v])=>a+(+q.split('|')[1]===m?tok(v).length:0),0);
@@ -803,7 +900,7 @@ dash(){
  <div class="card kpi" onclick="go('jamaah')"><div class="kt"><span class="ico">${ic('users')}</span><span class="chev">${ic('chev')}</span></div><div class="big">${D.members.length}</div><div class="mu">Total Jama'ah</div></div>
  <div class="card kpi" onclick="go('jamaah')"><div class="kt"><span class="ico">${ic('school')}</span><span class="chev">${ic('chev')}</span></div><div class="big">${KLSV().length}</div><div class="mu">Total Kelas</div></div>
  <div class="card kpi warn"><div class="kt"><span class="ico">${ic('alert')}</span></div><div class="big">${n}</div><div class="mu">Pelanggaran bulan ${BLN[m]}</div></div></div>
- <div class="sec2">Akses Cepat</div>
+ ${SHOL.strip()}<div class="sec2">Akses Cepat</div>
  <div class="ql">
  <button onclick="go('jamaah')"><span class="ico">${ic('users')}</span><span><b>Kelola Jama'ah</b><small>Daftar kelas &amp; anggota</small></span>${ic('chev')}</button>
  <button onclick="go('jamaah')"><span class="ico">${ic('cal')}</span><span><b>Input Pelanggaran</b><small>Catat per minggu</small></span>${ic('chev')}</button>
