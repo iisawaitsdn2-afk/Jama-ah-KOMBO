@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "KOMBO JAMA'AH",
+  "short_name": "KOMBO",
+  "description": "Aplikasi pendataan jama'ah dan catatan pelanggaran.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#04120d",
+  "theme_color": "#04120d",
+  "icons": [
+    { "src": "ikon-512.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
